@@ -3,9 +3,10 @@
 use crate::{
     api::Namespace,
     helpers::{self, CallFuture},
-    types::{Bytes, H256},
+    types::H256,
     Transport,
 };
+use bytes::Bytes;
 
 /// `Web3` namespace
 #[derive(Debug, Clone)]
@@ -34,7 +35,7 @@ impl<T: Transport> Web3<T> {
 
     /// Returns sha3 of the given data
     pub fn sha3(&self, bytes: Bytes) -> CallFuture<H256, T::Out> {
-        let bytes = helpers::serialize(&bytes);
+        let bytes = helpers::serialize(&bytes.into());
         CallFuture::new(self.transport.execute("web3_sha3", vec![bytes]))
     }
 }

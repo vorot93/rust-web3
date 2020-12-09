@@ -6,38 +6,39 @@ use std::fmt;
 
 /// Raw bytes wrapper
 #[derive(Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub struct Bytes(pub Vec<u8>);
+pub struct HexBytes(pub bytes::Bytes);
 
-impl<T: Into<Vec<u8>>> From<T> for Bytes {
+impl<T: Into<bytes::Bytes>> From<T> for HexBytes {
     fn from(data: T) -> Self {
-        Bytes(data.into())
+        Self(data.into())
     }
 }
 
-impl Serialize for Bytes {
+impl Serialize for HexBytes {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
     {
-        let mut serialized = "0x".to_owned();
+        let mut serialized = String::with_capacity(2 + self.0.len() * 2);
+        serialized.push_str("0x");
         serialized.push_str(&hex::encode(&self.0));
         serializer.serialize_str(serialized.as_ref())
     }
 }
 
-impl<'a> Deserialize<'a> for Bytes {
-    fn deserialize<D>(deserializer: D) -> Result<Bytes, D::Error>
+impl<'a> Deserialize<'a> for HexBytes {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'a>,
     {
-        deserializer.deserialize_identifier(BytesVisitor)
+        deserializer.deserialize_identifier(HexBytesVisitor)
     }
 }
 
-struct BytesVisitor;
+struct HexBytesVisitor;
 
-impl<'a> Visitor<'a> for BytesVisitor {
-    type Value = Bytes;
+impl<'a> Visitor<'a> for HexBytesVisitor {
+    type Value = HexBytes;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         write!(formatter, "a 0x-prefixed hex-encoded vector of bytes")

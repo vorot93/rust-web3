@@ -174,12 +174,12 @@ impl Tokenizable for Bytes {
 impl Tokenizable for H256 {
     fn from_token(token: Token) -> Result<Self, Error> {
         match token {
-            Token::FixedBytes(mut s) => {
+            Token::FixedBytes(s) => {
                 if s.len() != 32 {
                     return Err(Error::InvalidOutputType(format!("Expected `H256`, got {:?}", s)));
                 }
                 let mut data = [0; 32];
-                for (idx, val) in s.drain(..).enumerate() {
+                for (idx, val) in s.into_iter().enumerate() {
                     data[idx] = val;
                 }
                 Ok(data.into())
@@ -189,7 +189,7 @@ impl Tokenizable for H256 {
     }
 
     fn into_token(self) -> Token {
-        Token::FixedBytes(self.as_ref().to_vec())
+        Token::FixedBytes(bytes::Bytes::copy_from_slice(self.as_ref()))
     }
 }
 
@@ -293,7 +293,7 @@ macro_rules! tokenizable_item {
 }
 
 tokenizable_item! {
-    Token, String, Address, H256, U256, U128, bool, BytesArray, Vec<u8>,
+    Token, String, Address, H256, U256, U128, bool, BytesArray, bytes::Bytes,
     i8, i16, i32, i64, i128, u16, u32, u64, u128,
 }
 
@@ -304,7 +304,7 @@ impl Tokenizable for BytesArray {
                 let bytes = tokens
                     .into_iter()
                     .map(Tokenizable::from_token)
-                    .collect::<Result<Vec<u8>, Error>>()?;
+                    .collect::<Result<_, Error>>()?;
                 Ok(Self(bytes))
             }
             other => Err(Error::InvalidOutputType(format!("Expected `Array`, got {:?}", other))),
@@ -316,7 +316,7 @@ impl Tokenizable for BytesArray {
     }
 }
 
-impl Tokenizable for Vec<u8> {
+impl Tokenizable for bytes::Bytes {
     fn from_token(token: Token) -> Result<Self, Error> {
         match token {
             Token::Bytes(data) => Ok(data),
@@ -325,7 +325,7 @@ impl Tokenizable for Vec<u8> {
         }
     }
     fn into_token(self) -> Token {
-        Token::Bytes(self)
+        Token::Bytes(self.into())
     }
 }
 
@@ -371,7 +371,7 @@ macro_rules! impl_fixed_types {
             }
 
             fn into_token(self) -> Token {
-                Token::FixedBytes(self.to_vec())
+                Token::FixedBytes(self.to_vec().into())
             }
         }
 
@@ -442,6 +442,7 @@ impl_fixed_types!(1024);
 mod tests {
     use super::{Detokenize, Tokenizable};
     use crate::types::{Address, BytesArray, U256};
+    use bytes::Bytes;
     use ethabi::{Token, Uint};
     use hex_literal::hex;
 
@@ -457,7 +458,7 @@ mod tests {
         let _address: Address = output();
         let _string: String = output();
         let _bool: bool = output();
-        let _bytes: Vec<u8> = output();
+        let _bytes: Bytes = output();
         let _bytes_array: BytesArray = output();
 
         let _pair: (U256, bool) = output();
@@ -465,7 +466,7 @@ mod tests {
         let _array: [U256; 4] = output();
         let _bytes: Vec<[[u8; 1]; 64]> = output();
 
-        let _mixed: (Vec<Vec<u8>>, [U256; 4], Vec<U256>, U256) = output();
+        let _mixed: (Vec<Bytes>, [U256; 4], Vec<U256>, U256) = output();
 
         let _ints: (i8, i16, i32, i64, i128) = output();
         let _uints: (u16, u32, u64, u128) = output();

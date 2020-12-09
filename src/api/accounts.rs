@@ -124,11 +124,11 @@ mod accounts_signing {
                 .expect("signature recovery in electrum notation always fits in a u8");
 
             let signature_bytes = Bytes({
-                let mut bytes = Vec::with_capacity(65);
+                let mut bytes = BytesMut::with_capacity(65);
                 bytes.extend_from_slice(signature.r.as_bytes());
                 bytes.extend_from_slice(signature.s.as_bytes());
-                bytes.push(v);
-                bytes
+                bytes.put_u8(v);
+                bytes.freeze()
             });
 
             // We perform this allocation only after all previous fallible actions have completed successfully.
