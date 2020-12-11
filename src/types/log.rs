@@ -1,4 +1,4 @@
-use crate::types::{BlockNumber, Bytes, Index, H160, H256, U256, U64};
+use crate::types::{BlockNumber, HexBytes, Index, H160, H256, U256, U64};
 use serde::{Deserialize, Serialize, Serializer};
 
 /// A log produced by a transaction.
@@ -9,7 +9,7 @@ pub struct Log {
     /// Topics
     pub topics: Vec<H256>,
     /// Data
-    pub data: Bytes,
+    pub data: HexBytes,
     /// Block Hash
     #[serde(rename = "blockHash")]
     pub block_hash: Option<H256>,
@@ -193,6 +193,7 @@ mod tests {
         log::{FilterBuilder, Log},
         Address, H160, H256,
     };
+    use bytes::Bytes;
     use hex_literal::hex;
 
     #[test]
@@ -200,7 +201,7 @@ mod tests {
         let log = Log {
             address: Address::from_low_u64_be(1),
             topics: vec![],
-            data: hex!("").into(),
+            data: bytes!("").into(),
             block_hash: Some(H256::from_low_u64_be(2)),
             block_number: Some(1.into()),
             transaction_hash: Some(H256::from_low_u64_be(3)),
@@ -218,7 +219,7 @@ mod tests {
         let log = Log {
             address: H160::from_low_u64_be(1),
             topics: vec![],
-            data: hex!("").into(),
+            data: Bytes::from_static(&hex!("")).into(),
             block_hash: Some(H256::from_low_u64_be(2)),
             block_number: Some(1.into()),
             transaction_hash: Some(H256::from_low_u64_be(3)),
@@ -236,7 +237,7 @@ mod tests {
         let log = Log {
             address: Address::from_low_u64_be(1),
             topics: vec![],
-            data: hex!("").into(),
+            data: Bytes::from_static(&hex!("")).into(),
             block_hash: Some(H256::from_low_u64_be(2)),
             block_number: Some(1.into()),
             transaction_hash: Some(H256::from_low_u64_be(3)),
@@ -254,7 +255,7 @@ mod tests {
         let log = Log {
             address: Address::from_low_u64_be(1),
             topics: vec![],
-            data: hex!("").into(),
+            data: Bytes::from_static(&hex!("")).into(),
             block_hash: Some(H256::from_low_u64_be(2)),
             block_number: Some(1.into()),
             transaction_hash: Some(H256::from_low_u64_be(3)),
@@ -272,7 +273,7 @@ mod tests {
         let log = Log {
             address: Address::from_low_u64_be(1),
             topics: vec![],
-            data: hex!("").into(),
+            data: Bytes::from_static(&hex!("")).into(),
             block_hash: Some(H256::from_low_u64_be(2)),
             block_number: Some(1.into()),
             transaction_hash: Some(H256::from_low_u64_be(3)),

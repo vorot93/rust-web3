@@ -2,7 +2,7 @@
 
 use crate::{
     contract::error::Error,
-    types::{Address, Bytes, BytesArray, H256, U128, U256},
+    types::{Address, BytesArray, HexBytes, H256, U128, U256},
 };
 use arrayvec::ArrayVec;
 use ethabi::Token;
@@ -158,7 +158,7 @@ impl Tokenizable for String {
     }
 }
 
-impl Tokenizable for Bytes {
+impl Tokenizable for HexBytes {
     fn from_token(token: Token) -> Result<Self, Error> {
         match token {
             Token::Bytes(s) => Ok(s.into()),
@@ -476,14 +476,14 @@ mod tests {
     fn should_decode_array_of_fixed_bytes() {
         // byte[8][]
         let tokens = vec![Token::FixedArray(vec![
-            Token::FixedBytes(hex!("01").into()),
-            Token::FixedBytes(hex!("02").into()),
-            Token::FixedBytes(hex!("03").into()),
-            Token::FixedBytes(hex!("04").into()),
-            Token::FixedBytes(hex!("05").into()),
-            Token::FixedBytes(hex!("06").into()),
-            Token::FixedBytes(hex!("07").into()),
-            Token::FixedBytes(hex!("08").into()),
+            Token::FixedBytes(bytes!("01")),
+            Token::FixedBytes(bytes!("02")),
+            Token::FixedBytes(bytes!("03")),
+            Token::FixedBytes(bytes!("04")),
+            Token::FixedBytes(bytes!("05")),
+            Token::FixedBytes(bytes!("06")),
+            Token::FixedBytes(bytes!("07")),
+            Token::FixedBytes(bytes!("08")),
         ])];
         let data: [[u8; 1]; 8] = Detokenize::from_tokens(tokens).unwrap();
         assert_eq!(data[0][0], 1);

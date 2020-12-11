@@ -30,9 +30,10 @@ pub use self::{
 
 use crate::{
     confirm, error,
-    types::{Bytes, TransactionReceipt, TransactionRequest, U64},
+    types::{TransactionReceipt, TransactionRequest, U64},
     DuplexTransport, Transport,
 };
+use bytes::Bytes;
 use futures::Future;
 use std::time::Duration;
 

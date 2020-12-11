@@ -3,9 +3,10 @@
 use crate::{
     api::{Eth, EthFilter, Namespace},
     error,
-    types::{Bytes, TransactionReceipt, TransactionRequest, H256, U64},
+    types::{TransactionReceipt, TransactionRequest, H256, U64},
     Transport,
 };
+use bytes::Bytes;
 use futures::{Future, StreamExt};
 use std::time::Duration;
 

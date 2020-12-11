@@ -47,10 +47,9 @@ mod accounts_signing {
         api::Web3,
         error,
         signing::Signature,
-        types::{
-            Address, Bytes, Recovery, RecoveryMessage, SignedData, SignedTransaction, TransactionParameters, U256,
-        },
+        types::{Address, Recovery, RecoveryMessage, SignedData, SignedTransaction, TransactionParameters, U256},
     };
+    use bytes::{BufMut, Bytes, BytesMut};
     use rlp::RlpStream;
     use std::convert::TryInto;
 
@@ -95,7 +94,7 @@ mod accounts_signing {
                 gas: tx.gas,
                 gas_price,
                 value: tx.value,
-                data: tx.data.0,
+                data: tx.data,
             };
             let signed = tx.sign(key, chain_id);
             Ok(signed)
@@ -123,13 +122,13 @@ mod accounts_signing {
                 .try_into()
                 .expect("signature recovery in electrum notation always fits in a u8");
 
-            let signature_bytes = Bytes({
+            let signature_bytes = {
                 let mut bytes = BytesMut::with_capacity(65);
                 bytes.extend_from_slice(signature.r.as_bytes());
                 bytes.extend_from_slice(signature.s.as_bytes());
                 bytes.put_u8(v);
                 bytes.freeze()
-            });
+            };
 
             // We perform this allocation only after all previous fallible actions have completed successfully.
             let message = message.to_owned();
@@ -171,7 +170,7 @@ mod accounts_signing {
         pub gas: U256,
         pub gas_price: U256,
         pub value: U256,
-        pub data: Vec<u8>,
+        pub data: Bytes,
     }
 
     impl Transaction {
@@ -248,6 +247,7 @@ mod tests {
         types::{Address, Recovery, SignedTransaction, TransactionParameters, U256},
     };
     use accounts_signing::*;
+    use bytes::Bytes;
     use hex_literal::hex;
     use serde_json::json;
 
@@ -294,7 +294,7 @@ mod tests {
             v: 0x25,
             r: hex!("c9cf86333bcb065d140032ecaab5d9281bde80f21b9687b3e94161de42d51895").into(),
             s: hex!("727a108a0b8d101465414033c3f705a9c7b826e596766046ee1183dbc8aeaa68").into(),
-            raw_transaction: hex!("f869808504e3b29200831e848094f0109fc8df283027b6285cc889f5aa624eac1f55843b9aca008025a0c9cf86333bcb065d140032ecaab5d9281bde80f21b9687b3e94161de42d51895a0727a108a0b8d101465414033c3f705a9c7b826e596766046ee1183dbc8aeaa68").into(),
+            raw_transaction: bytes!("f869808504e3b29200831e848094f0109fc8df283027b6285cc889f5aa624eac1f55843b9aca008025a0c9cf86333bcb065d140032ecaab5d9281bde80f21b9687b3e94161de42d51895a0727a108a0b8d101465414033c3f705a9c7b826e596766046ee1183dbc8aeaa68"),
             transaction_hash: hex!("de8db924885b0803d2edc335f745b2b8750c8848744905684c20b987443a9593").into(),
         };
 
@@ -355,11 +355,11 @@ mod tests {
         let signed = accounts.sign("Some data", SecretKeyRef::new(&key));
 
         assert_eq!(
-            signed.message_hash,
-            hex!("1da44b586eb0729ff70a73c326926f6ed5a25f5b056e7f47fbc6e58d86871655").into()
+            signed.message_hash.as_bytes(),
+            hex!("1da44b586eb0729ff70a73c326926f6ed5a25f5b056e7f47fbc6e58d86871655")
         );
         assert_eq!(
-            signed.signature.0,
+            &*signed.signature,
             hex!("b91467e570a6466aa9e9876cbcd013baba02900b8979d43fe208a4a4f339f5fd6007e74cd82e037b800186422fc2da167c747ef045e5d18a5f5d4300f8e1a0291c")
         );
 
@@ -430,7 +430,7 @@ mod tests {
             gas_price: 234_567_897_654_321u64.into(),
             to: Some(hex!("F0109fC8DF283027b6285cc889F5aA624EaC1F55").into()),
             value: 1_000_000_000.into(),
-            data: Vec::new(),
+            data: bytes!(""),
         };
         let skey = SecretKey::from_slice(&hex!(
             "4c0883a69102937d6231471b5dbb6204fe5129617082792ae468d01a3f362318"
@@ -445,7 +445,7 @@ mod tests {
             v: 0x25,
             r: hex!("09ebb6ca057a0535d6186462bc0b465b561c94a295bdb0621fc19208ab149a9c").into(),
             s: hex!("440ffd775ce91a833ab410777204d5341a6f9fa91216a6f3ee2c051fea6a0428").into(),
-            raw_transaction: hex!("f86a8086d55698372431831e848094f0109fc8df283027b6285cc889f5aa624eac1f55843b9aca008025a009ebb6ca057a0535d6186462bc0b465b561c94a295bdb0621fc19208ab149a9ca0440ffd775ce91a833ab410777204d5341a6f9fa91216a6f3ee2c051fea6a0428").into(),
+            raw_transaction: bytes!("f86a8086d55698372431831e848094f0109fc8df283027b6285cc889f5aa624eac1f55843b9aca008025a009ebb6ca057a0535d6186462bc0b465b561c94a295bdb0621fc19208ab149a9ca0440ffd775ce91a833ab410777204d5341a6f9fa91216a6f3ee2c051fea6a0428"),
             transaction_hash: hex!("d8f64a42b57be0d565f385378db2f6bf324ce14a594afc05de90436e9ce01f60").into(),
         };
 

@@ -19,7 +19,7 @@ mod work;
 
 pub use self::{
     block::{Block, BlockHeader, BlockId, BlockNumber},
-    bytes::Bytes,
+    bytes::HexBytes,
     bytes_array::BytesArray,
     log::{Filter, FilterBuilder, Log},
     parity_peers::{

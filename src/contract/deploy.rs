@@ -5,7 +5,7 @@ use crate::{
     confirm,
     contract::{tokens::Tokenize, Contract, Options},
     error,
-    types::{Address, Bytes, TransactionReceipt, TransactionRequest},
+    types::{Address, HexBytes, TransactionReceipt, TransactionRequest},
     Transport,
 };
 use futures::{Future, TryFutureExt};
@@ -123,7 +123,9 @@ impl<T: Transport> Builder<T> {
             code_hex = code_hex.replacen(&replace, &address, 1);
         }
         code_hex = code_hex.replace("\"", "").replace("0x", ""); // This is to fix truffle + serde_json redundant `"` and `0x`
-        let code = hex::decode(&code_hex).map_err(|e| ethabi::Error::Other(format!("hex decode error: {}", e)))?;
+        let code = hex::decode(&code_hex)
+            .map_err(|e| ethabi::Error::Other(format!("hex decode error: {}", e)))?
+            .into();
 
         let params = params.into_tokens();
         let data = match (abi.constructor(), params.is_empty()) {
@@ -143,7 +145,7 @@ impl<T: Transport> Builder<T> {
             gas_price: options.gas_price,
             value: options.value,
             nonce: options.nonce,
-            data: Some(Bytes(data)),
+            data: Some(data.into()),
             condition: options.condition,
         };
         let receipt = send(tx).await?;

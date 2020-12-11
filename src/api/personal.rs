@@ -142,7 +142,7 @@ mod tests {
         gas: Some(0x7f110.into()),
         gas_price: Some(0x09184e72a000u64.into()),
         value: Some(0x7f110.into()),
-        data: Some(hex!("603880600c6000396000f300603880600c6000396000f3603880600c6000396000f360").into()),
+        data: Some(bytes!("603880600c6000396000f300603880600c6000396000f3603880600c6000396000f360").into()),
         nonce: Some(0x0.into()),
         condition: None,
       }, "hunter2"

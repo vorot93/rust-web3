@@ -1,4 +1,5 @@
-use crate::types::{Bytes, Index, Log, H160, H2048, H256, U256, U64};
+use crate::types::{HexBytes, Index, Log, H160, H2048, H256, U256, U64};
+use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 
 /// Description of a Transaction, pending or in the chain.
@@ -29,10 +30,10 @@ pub struct Transaction {
     /// Gas amount
     pub gas: U256,
     /// Input data
-    pub input: Bytes,
+    pub input: HexBytes,
     /// Raw transaction data
     #[serde(default)]
-    pub raw: Option<Bytes>,
+    pub raw: Option<HexBytes>,
 }
 
 /// "Receipt" of an executed transaction: details of its execution.
@@ -76,6 +77,7 @@ pub struct Receipt {
 #[derive(Debug, Default, Clone, PartialEq, Serialize, Deserialize)]
 pub struct RawTransaction {
     /// Signed transaction as raw bytes
+    #[serde(with = "crate::helpers::hex_serialize")]
     pub raw: Bytes,
     /// Transaction details
     pub tx: RawTransactionDetails,
@@ -109,6 +111,7 @@ pub struct RawTransactionDetails {
     /// Gas amount
     pub gas: U256,
     /// Input data
+    #[serde(with = "crate::helpers::hex_serialize")]
     pub input: Bytes,
     /// ECDSA recovery id, set by Geth
     pub v: Option<U64>,

@@ -1,7 +1,7 @@
 use crate::{
     api::Namespace,
     helpers::{self, CallFuture},
-    types::{Bytes, CallRequest},
+    types::{CallRequest, HexBytes},
     Transport,
 };
 
@@ -60,7 +60,7 @@ mod tests {
                 gas: None,
                 gas_price: None,
                 value: None,
-                data: Some(hex!("0493").into()),
+                data: Some(bytes!("0493")),
             },
             CallRequest {
                 from: None,
@@ -68,11 +68,11 @@ mod tests {
                 gas: None,
                 gas_price: None,
                 value: Some(0x5.into()),
-                data: Some(hex!("0723").into())
+                data: Some(bytes!("0723"))
             }
         ] => "parity_call", vec![
             r#"[{"to":"0x0000000000000000000000000000000000000123","value":"0x1"},{"data":"0x0493","from":"0x0000000000000000000000000000000000000321","to":"0x0000000000000000000000000000000000000123"},{"data":"0x0723","to":"0x0000000000000000000000000000000000000765","value":"0x5"}]"#
         ];
-        Value::Array(vec![Value::String("0x010203".into()), Value::String("0x7198ab".into()), Value::String("0xde763f".into())]) => vec![hex!("010203").into(), hex!("7198ab").into(), hex!("de763f").into()]
+        Value::Array(vec![Value::String("0x010203".into()), Value::String("0x7198ab".into()), Value::String("0xde763f".into())]) => vec![bytes!("010203"), bytes!("7198ab"), bytes!("de763f")]
     );
 }

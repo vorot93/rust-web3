@@ -13,7 +13,7 @@ edition = "2018"
 
 [dependencies]
 arrayvec = "0.5.0"
-bytes = "0.6"
+bytes = { version = "0.6", features = ["serde"] }
 derive_more = "0.99.1"
 ethabi = { git = "https://github.com/rust-ethereum/ethabi", branch = "vorot93/bytes" }
 ethereum-types = { git = "https://github.com/paritytech/parity-common", features = ["rlp", "std"] }

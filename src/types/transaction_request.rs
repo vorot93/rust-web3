@@ -1,4 +1,4 @@
-use crate::types::{Address, Bytes, U256};
+use crate::types::{Address, HexBytes, U256};
 use serde::{Deserialize, Serialize};
 
 /// Call contract request (eth_call / eth_estimateGas)
@@ -26,7 +26,7 @@ pub struct CallRequest {
     pub value: Option<U256>,
     /// Data (None for empty data)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub data: Option<Bytes>,
+    pub data: Option<HexBytes>,
 }
 
 /// Send Transaction Parameters
@@ -49,7 +49,7 @@ pub struct TransactionRequest {
     pub value: Option<U256>,
     /// Transaction data (None for empty bytes)
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub data: Option<Bytes>,
+    pub data: Option<HexBytes>,
     /// Transaction nonce (None for next available nonce)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub nonce: Option<U256>,
@@ -73,6 +73,7 @@ pub enum TransactionCondition {
 #[cfg(test)]
 mod tests {
     use super::{Address, CallRequest, TransactionCondition, TransactionRequest};
+    use bytes::Bytes;
     use hex_literal::hex;
 
     #[test]
@@ -84,7 +85,7 @@ mod tests {
             gas: Some(21_000.into()),
             gas_price: None,
             value: Some(5_000_000.into()),
-            data: Some(hex!("010203").into()),
+            data: Some(Bytes::from_static(&hex!("010203")).into()),
         };
 
         // when
@@ -117,7 +118,7 @@ mod tests {
         assert_eq!(deserialized.gas, Some(21_000.into()));
         assert_eq!(deserialized.gas_price, None);
         assert_eq!(deserialized.value, Some(5_000_000.into()));
-        assert_eq!(deserialized.data, Some(hex!("010203").into()));
+        assert_eq!(deserialized.data, Some(Bytes::from_static(&hex!("010203")).into()));
     }
 
     #[test]
@@ -129,7 +130,7 @@ mod tests {
             gas: Some(21_000.into()),
             gas_price: None,
             value: Some(5_000_000.into()),
-            data: Some(hex!("010203").into()),
+            data: Some(Bytes::from_static(&hex!("010203")).into()),
             nonce: None,
             condition: Some(TransactionCondition::Block(5)),
         };
@@ -170,7 +171,7 @@ mod tests {
         assert_eq!(deserialized.gas, Some(21_000.into()));
         assert_eq!(deserialized.gas_price, None);
         assert_eq!(deserialized.value, Some(5_000_000.into()));
-        assert_eq!(deserialized.data, Some(hex!("010203").into()));
+        assert_eq!(deserialized.data, Some(Bytes::from_static(&hex!("010203")).into()));
         assert_eq!(deserialized.nonce, None);
         assert_eq!(deserialized.condition, Some(TransactionCondition::Block(5)));
     }

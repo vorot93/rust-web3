@@ -1,6 +1,6 @@
 //! Types for the Parity Ad-Hoc Trace API
 
-use crate::types::{Action, ActionType, Bytes, Res, H160, H256, U256};
+use crate::types::{Action, ActionType, HexBytes, Res, H160, H256, U256};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -22,7 +22,7 @@ pub enum TraceType {
 /// Ad-Hoc trace API type
 pub struct BlockTrace {
     /// Output Bytes
-    pub output: Bytes,
+    pub output: HexBytes,
     /// Transaction Trace
     pub trace: Option<Vec<TransactionTrace>>,
     /// Virtual Machine Execution Trace
@@ -71,7 +71,7 @@ pub struct AccountDiff {
     /// Account nonce.
     pub nonce: Diff<U256>,
     /// Account code.
-    pub code: Diff<Bytes>,
+    pub code: Diff<HexBytes>,
     /// Account storage.
     pub storage: BTreeMap<H256, Diff<H256>>,
 }
@@ -105,7 +105,7 @@ pub struct TransactionTrace {
 /// A record of a full VM trace for a CALL/CREATE.
 pub struct VMTrace {
     /// The code to be executed.
-    pub code: Bytes,
+    pub code: HexBytes,
     /// The operations executed.
     pub ops: Vec<VMOperation>,
 }
@@ -146,7 +146,7 @@ pub struct MemoryDiff {
     /// Offset into memory the change begins.
     pub off: usize,
     /// The changed data.
-    pub data: Bytes,
+    pub data: HexBytes,
 }
 
 #[derive(Debug, Clone, PartialEq, Default, Deserialize, Serialize)]

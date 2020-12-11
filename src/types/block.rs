@@ -1,4 +1,4 @@
-use crate::types::{Bytes, H160, H2048, H256, H64, U256, U64};
+use crate::types::{HexBytes, H160, H2048, H256, H64, U256, U64};
 use serde::{ser::SerializeStruct, Deserialize, Serialize, Serializer};
 
 /// The block header type returned from RPC calls.
@@ -35,7 +35,7 @@ pub struct BlockHeader {
     pub gas_limit: U256,
     /// Extra data
     #[serde(rename = "extraData")]
-    pub extra_data: Bytes,
+    pub extra_data: HexBytes,
     /// Logs bloom
     #[serde(rename = "logsBloom")]
     pub logs_bloom: H2048,
@@ -85,7 +85,7 @@ pub struct Block<TX> {
     pub gas_limit: U256,
     /// Extra data
     #[serde(rename = "extraData")]
-    pub extra_data: Bytes,
+    pub extra_data: HexBytes,
     /// Logs bloom
     #[serde(rename = "logsBloom")]
     pub logs_bloom: Option<H2048>,
@@ -98,7 +98,7 @@ pub struct Block<TX> {
     pub total_difficulty: Option<U256>,
     /// Seal fields
     #[serde(default, rename = "sealFields")]
-    pub seal_fields: Vec<Bytes>,
+    pub seal_fields: Vec<HexBytes>,
     /// Uncles' hashes
     pub uncles: Vec<H256>,
     /// Transactions

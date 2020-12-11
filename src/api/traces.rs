@@ -1,7 +1,7 @@
 use crate::{
     api::Namespace,
     helpers::{self, CallFuture},
-    types::{BlockNumber, BlockTrace, Bytes, CallRequest, Index, Trace, TraceFilter, TraceType, H256},
+    types::{BlockNumber, BlockTrace, CallRequest, HexBytes, Index, Trace, TraceFilter, TraceType, H256},
     Transport,
 };
 
@@ -39,7 +39,7 @@ impl<T: Transport> Traces<T> {
     }
 
     /// Traces a call to `eth_sendRawTransaction` without making the call, returning the traces
-    pub fn raw_transaction(&self, data: Bytes, trace_type: Vec<TraceType>) -> CallFuture<BlockTrace, T::Out> {
+    pub fn raw_transaction(&self, data: HexBytes, trace_type: Vec<TraceType>) -> CallFuture<BlockTrace, T::Out> {
         let data = helpers::serialize(&data);
         let trace_type = helpers::serialize(&trace_type);
         CallFuture::new(self.transport.execute("trace_rawTransaction", vec![data, trace_type]))
@@ -224,7 +224,7 @@ mod tests {
     );
 
     rpc_test!(
-    Traces:raw_transaction, hex!("01020304"), vec![TraceType::Trace]
+    Traces:raw_transaction, bytes!("01020304"), vec![TraceType::Trace]
     =>
     "trace_rawTransaction", vec![r#""0x01020304""#, r#"["trace"]"#];
     ::serde_json::from_str(EXAMPLE_BLOCKTRACE).unwrap()

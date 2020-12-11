@@ -206,6 +206,7 @@ mod tests {
         transports::test::TestTransport,
         types::{Address, FilterBuilder, Log, H256},
     };
+    use bytes::Bytes;
     use futures::stream::StreamExt;
     use hex_literal::hex;
     use std::time::Duration;
@@ -235,7 +236,7 @@ mod tests {
         let log = Log {
             address: Address::from_low_u64_be(1),
             topics: vec![],
-            data: hex!("").into(),
+            data: bytes!("").into(),
             block_hash: Some(H256::from_low_u64_be(2)),
             block_number: Some(1.into()),
             transaction_hash: Some(H256::from_low_u64_be(3)),
@@ -277,7 +278,7 @@ mod tests {
         let log = Log {
             address: Address::from_low_u64_be(1),
             topics: vec![],
-            data: hex!("").into(),
+            data: Bytes::from_static(&hex!("")).into(),
             block_hash: Some(H256::from_low_u64_be(2)),
             block_number: Some(1.into()),
             transaction_hash: Some(H256::from_low_u64_be(3)),

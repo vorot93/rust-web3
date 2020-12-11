@@ -1,5 +1,5 @@
 //! Types for the Parity Transaction-Trace Filtering API
-use crate::types::{Address, BlockNumber, Bytes, H160, H256, U256};
+use crate::types::{Address, BlockNumber, HexBytes, H160, H256, U256};
 use serde::{Deserialize, Serialize};
 
 /// Trace filter
@@ -160,7 +160,7 @@ pub struct CallResult {
     #[serde(rename = "gasUsed")]
     pub gas_used: U256,
     /// Output bytes
-    pub output: Bytes,
+    pub output: HexBytes,
 }
 
 /// Craete Result
@@ -170,7 +170,7 @@ pub struct CreateResult {
     #[serde(rename = "gasUsed")]
     pub gas_used: U256,
     /// Code
-    pub code: Bytes,
+    pub code: HexBytes,
     /// Assigned address
     pub address: Address,
 }
@@ -187,7 +187,7 @@ pub struct Call {
     /// Gas
     pub gas: U256,
     /// Input data
-    pub input: Bytes,
+    pub input: HexBytes,
     /// The type of the call.
     #[serde(rename = "callType")]
     pub call_type: CallType,
@@ -229,7 +229,7 @@ pub struct Create {
     /// Gas
     pub gas: U256,
     /// Initialization code
-    pub init: Bytes,
+    pub init: HexBytes,
 }
 
 /// Suicide

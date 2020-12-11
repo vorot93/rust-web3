@@ -90,9 +90,77 @@ pub fn to_result_from_output(output: rpc::Output) -> error::Result<rpc::Value> {
     }
 }
 
+pub mod hex_serialize {
+    use super::*;
+    use hex::FromHex;
+    use serde::{de::*, *};
+
+    /// A serializer that first encodes the argument as a hex-string
+    pub fn serialize<T, S>(value: &T, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+        T: AsRef<[u8]>,
+    {
+        let mut serialized = String::with_capacity(2 + value.len() * 2);
+        serialized.push_str("0x");
+        serialized.push_str(&hex::encode(&value));
+        serializer.serialize_str(&serialized)
+    }
+
+    /// A deserializer that first encodes the argument as a hex-string
+    pub fn deserialize<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+    where
+        D: Deserializer<'de>,
+        T: From<Vec<u8>>,
+    {
+        struct HexVisitor<T>(PhantomData<T>);
+
+        impl<'de, T> Visitor<'de> for HexVisitor<T>
+        where
+            T: From<Vec<u8>>,
+        {
+            type Value = T;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                write!(formatter, "hex ASCII text")
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<T, E>
+            where
+                E: de::Error,
+            {
+                if value.len() >= 2 && &value[0..2] == "0x" {
+                    Ok(hex::decode(&value[2..])
+                        .map_err(|e| match e {
+                            FromHexError::InvalidHexCharacter { c, index } => E::invalid_value(
+                                de::Unexpected::Char(c),
+                                &format!("Unexpected character {:?} as position {}", c, index).as_str(),
+                            ),
+                            FromHexError::InvalidStringLength => {
+                                E::invalid_length(value.len(), &"Unexpected length of hex string")
+                            }
+                            FromHexError::OddLength => E::invalid_length(value.len(), &"Odd length of hex string"),
+                        })?
+                        .into())
+                } else {
+                    Err(Error::invalid_value(Unexpected::Str(value), &"0x prefix"))
+                }
+            }
+        }
+
+        deserializer.deserialize_str(HexVisitor(PhantomData))
+    }
+}
+
 #[macro_use]
 #[cfg(test)]
 pub mod tests {
+    macro_rules! bytes {
+        ( $x:expr ) => {
+            ::bytes::Bytes::from_static(&::hex_literal::hex!($x))
+        };
+    }
+
     macro_rules! rpc_test {
     // With parameters
     (

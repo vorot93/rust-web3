@@ -161,6 +161,7 @@ impl Error for ParseSignatureError {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use bytes::Bytes;
     use hex_literal::hex;
 
     #[test]
@@ -176,7 +177,7 @@ mod tests {
             v,
             r,
             s,
-            signature: hex!("b91467e570a6466aa9e9876cbcd013baba02900b8979d43fe208a4a4f339f5fd6007e74cd82e037b800186422fc2da167c747ef045e5d18a5f5d4300f8e1a0291c").into(),
+            signature: Bytes::from_static(&hex!("b91467e570a6466aa9e9876cbcd013baba02900b8979d43fe208a4a4f339f5fd6007e74cd82e037b800186422fc2da167c747ef045e5d18a5f5d4300f8e1a0291c")).into(),
         };
         let expected_signature = (
             hex!("b91467e570a6466aa9e9876cbcd013baba02900b8979d43fe208a4a4f339f5fd6007e74cd82e037b800186422fc2da167c747ef045e5d18a5f5d4300f8e1a029").into(), 1
@@ -185,7 +186,7 @@ mod tests {
         assert_eq!((sig.to_vec(), id), expected_signature);
         let (sig, id) = Recovery::new(message, v as _, r, s).as_signature().unwrap();
         assert_eq!((sig.to_vec(), id), expected_signature);
-        let (sig, id) = Recovery::from_raw_signature(message, &signed.signature.0)
+        let (sig, id) = Recovery::from_raw_signature(message, &signed.signature)
             .unwrap()
             .as_signature()
             .unwrap();

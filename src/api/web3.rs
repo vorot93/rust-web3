@@ -3,7 +3,7 @@
 use crate::{
     api::Namespace,
     helpers::{self, CallFuture},
-    types::H256,
+    types::{HexBytes, H256},
     Transport,
 };
 use bytes::Bytes;
@@ -35,7 +35,7 @@ impl<T: Transport> Web3<T> {
 
     /// Returns sha3 of the given data
     pub fn sha3(&self, bytes: Bytes) -> CallFuture<H256, T::Out> {
-        let bytes = helpers::serialize(&bytes.into());
+        let bytes = helpers::serialize(&HexBytes::from(bytes));
         CallFuture::new(self.transport.execute("web3_sha3", vec![bytes]))
     }
 }
@@ -52,7 +52,7 @@ mod tests {
     );
 
     rpc_test! (
-      Web3:sha3, hex!("01020304")
+      Web3:sha3, bytes!("01020304")
       =>
       "web3_sha3", vec![r#""0x01020304""#];
       Value::String("0x0000000000000000000000000000000000000000000000000000000000000123".into()) => H256::from_low_u64_be(0x123)

@@ -5,7 +5,7 @@ use crate::{
     confirm,
     contract::tokens::{Detokenize, Tokenize},
     types::{
-        Address, BlockId, Bytes, CallRequest, FilterBuilder, TransactionCondition, TransactionReceipt,
+        Address, BlockId, CallRequest, FilterBuilder, HexBytes, TransactionCondition, TransactionReceipt,
         TransactionRequest, H256, U256,
     },
     Transport,
@@ -135,7 +135,7 @@ impl<T: Transport> Contract<T> {
                 gas_price,
                 value,
                 nonce,
-                data: Some(Bytes(data)),
+                data: Some(data.into()),
                 condition,
             })
             .await
@@ -167,7 +167,7 @@ impl<T: Transport> Contract<T> {
             gas_price: options.gas_price,
             value: options.value,
             nonce: options.nonce,
-            data: Some(Bytes(fn_data)),
+            data: Some(fn_data.into()),
             condition: options.condition,
         };
         confirm::send_transaction_with_confirmation(
@@ -193,7 +193,7 @@ impl<T: Transport> Contract<T> {
                     gas: options.gas,
                     gas_price: options.gas_price,
                     value: options.value,
-                    data: Some(Bytes(data)),
+                    data: Some(data.into()),
                 },
                 None,
             )
@@ -220,12 +220,12 @@ impl<T: Transport> Contract<T> {
                     gas: options.gas,
                     gas_price: options.gas_price,
                     value: options.value,
-                    data: Some(Bytes(call)),
+                    data: Some(call.into()),
                 },
                 block.into(),
             )
             .await?;
-        let output = function.decode_output(&bytes.0)?;
+        let output = function.decode_output(&*bytes)?;
         R::from_tokens(output)
     }
 
@@ -307,7 +307,7 @@ mod contract_signing {
                 nonce: options.nonce,
                 to: Some(self.address),
                 gas_price: options.gas_price,
-                data: Bytes(fn_data),
+                data: fn_data.into(),
                 ..Default::default()
             };
             if let Some(gas) = options.gas {

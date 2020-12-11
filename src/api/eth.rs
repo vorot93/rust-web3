@@ -4,11 +4,12 @@ use crate::{
     api::Namespace,
     helpers::{self, CallFuture},
     types::{
-        Address, Block, BlockHeader, BlockId, BlockNumber, Bytes, CallRequest, Filter, Index, Log, SyncState,
+        Address, Block, BlockHeader, BlockId, BlockNumber, CallRequest, Filter, HexBytes, Index, Log, SyncState,
         Transaction, TransactionId, TransactionReceipt, TransactionRequest, Work, H256, H520, H64, U256, U64,
     },
     Transport,
 };
+use bytes::Bytes;
 
 /// `Eth` namespace
 #[derive(Debug, Clone)]
@@ -41,34 +42,19 @@ impl<T: Transport> Eth<T> {
     }
 
     /// Call a constant method of contract without changing the state of the blockchain.
-    pub fn call(&self, req: CallRequest, block: Option<BlockId>) -> CallFuture<Bytes, T::Out> {
+    pub async fn call(&self, req: CallRequest, block: Option<BlockId>) -> errors::Result<Bytes> {
         let req = helpers::serialize(&req);
         let block = helpers::serialize(&block.unwrap_or_else(|| BlockNumber::Latest.into()));
 
-        CallFuture::new(self.transport.execute("eth_call", vec![req, block]))
+        let res: errors::Result<HexBytes> =
+            CallFuture::<HexBytes, _>::new(self.transport.execute("eth_call", vec![req, block])).await;
+
+        Ok(res?.0)
     }
 
     /// Get coinbase address
     pub fn coinbase(&self) -> CallFuture<Address, T::Out> {
         CallFuture::new(self.transport.execute("eth_coinbase", vec![]))
-    }
-
-    /// Compile LLL
-    pub fn compile_lll(&self, code: String) -> CallFuture<Bytes, T::Out> {
-        let code = helpers::serialize(&code);
-        CallFuture::new(self.transport.execute("eth_compileLLL", vec![code]))
-    }
-
-    /// Compile Solidity
-    pub fn compile_solidity(&self, code: String) -> CallFuture<Bytes, T::Out> {
-        let code = helpers::serialize(&code);
-        CallFuture::new(self.transport.execute("eth_compileSolidity", vec![code]))
-    }
-
-    /// Compile Serpent
-    pub fn compile_serpent(&self, code: String) -> CallFuture<Bytes, T::Out> {
-        let code = helpers::serialize(&code);
-        CallFuture::new(self.transport.execute("eth_compileSerpent", vec![code]))
     }
 
     /// Call a contract without changing the state of the blockchain to estimate gas usage.
@@ -156,11 +142,15 @@ impl<T: Transport> Eth<T> {
     }
 
     /// Get code under given address
-    pub fn code(&self, address: Address, block: Option<BlockNumber>) -> CallFuture<Bytes, T::Out> {
+    pub async fn code(&self, address: Address, block: Option<BlockNumber>) -> errors::Result<Bytes> {
         let address = helpers::serialize(&address);
         let block = helpers::serialize(&block.unwrap_or(BlockNumber::Latest));
 
-        CallFuture::new(self.transport.execute("eth_getCode", vec![address, block]))
+        Ok(
+            CallFuture::new(self.transport.execute("eth_getCode", vec![address, block]))
+                .await?
+                .0,
+        )
     }
 
     /// Get supported compilers
@@ -308,7 +298,7 @@ impl<T: Transport> Eth<T> {
 
     /// Sends a rlp-encoded signed transaction
     pub fn send_raw_transaction(&self, rlp: Bytes) -> CallFuture<H256, T::Out> {
-        let rlp = helpers::serialize(&rlp);
+        let rlp = helpers::serialize(&HexBytes(rlp));
         CallFuture::new(self.transport.execute("eth_sendRawTransaction", vec![rlp]))
     }
 
@@ -321,7 +311,7 @@ impl<T: Transport> Eth<T> {
     /// Signs a hash of given data
     pub fn sign(&self, address: Address, data: Bytes) -> CallFuture<H520, T::Out> {
         let address = helpers::serialize(&address);
-        let data = helpers::serialize(&data);
+        let data = helpers::serialize(&HexBytes(data));
         CallFuture::new(self.transport.execute("eth_sign", vec![address, data]))
     }
 
@@ -489,27 +479,12 @@ mod tests {
       }, None
       =>
       "eth_call", vec![r#"{"to":"0x0000000000000000000000000000000000000123","value":"0x1"}"#, r#""latest""#];
-      Value::String("0x010203".into()) => hex!("010203")
+      Value::String("0x010203".into()) => bytes!("010203")
     );
 
     rpc_test! (
       Eth:coinbase => "eth_coinbase";
       Value::String("0x0000000000000000000000000000000000000123".into()) => Address::from_low_u64_be(0x123)
-    );
-
-    rpc_test! (
-      Eth:compile_lll, "code" => "eth_compileLLL", vec![r#""code""#];
-      Value::String("0x0123".into()) => hex!("0123")
-    );
-
-    rpc_test! (
-      Eth:compile_solidity, "code" => "eth_compileSolidity", vec![r#""code""#];
-      Value::String("0x0123".into()) => hex!("0123")
-    );
-
-    rpc_test! (
-      Eth:compile_serpent, "code" => "eth_compileSerpent", vec![r#""code""#];
-      Value::String("0x0123".into()) => hex!("0123")
     );
 
     rpc_test! (
@@ -605,7 +580,7 @@ mod tests {
       Eth:code, H256::from_low_u64_be(0x123), Some(BlockNumber::Pending)
       =>
       "eth_getCode", vec![r#""0x0000000000000000000000000000000000000123""#, r#""pending""#];
-      Value::String("0x0123".into()) => hex!("0123")
+      Value::String("0x0123".into()) => bytes!("0123")
     );
 
     rpc_test! (
@@ -764,7 +739,7 @@ mod tests {
     );
 
     rpc_test! (
-      Eth:send_raw_transaction, hex!("01020304")
+      Eth:send_raw_transaction, bytes!("01020304")
       =>
       "eth_sendRawTransaction", vec![r#""0x01020304""#];
       Value::String("0x0000000000000000000000000000000000000000000000000000000000000123".into()) => H256::from_low_u64_be(0x123)
@@ -783,7 +758,7 @@ mod tests {
     );
 
     rpc_test! (
-      Eth:sign, H256::from_low_u64_be(0x123), hex!("01020304")
+      Eth:sign, H256::from_low_u64_be(0x123), bytes!("01020304")
       =>
       "eth_sign", vec![r#""0x0000000000000000000000000000000000000123""#, r#""0x01020304""#];
       Value::String("0x0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000123".into()) => H520::from_low_u64_be(0x123)

@@ -1,4 +1,5 @@
-use crate::types::{Address, Bytes, CallRequest, H256, U256};
+use crate::types::{Address, CallRequest, HexBytes, H256, U256};
+use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 
 /// Struct representing signed data returned from `Accounts::sign` method.
@@ -16,6 +17,7 @@ pub struct SignedData {
     /// S value.
     pub s: H256,
     /// The signature bytes.
+    #[serde(with = "crate::helpers::hex_serialize")]
     pub signature: Bytes,
 }
 
@@ -85,7 +87,7 @@ impl From<CallRequest> for TransactionParameters {
             gas: call.gas.unwrap_or(TRANSACTION_DEFAULT_GAS),
             gas_price: call.gas_price,
             value: call.value.unwrap_or_default(),
-            data: call.data.unwrap_or_default(),
+            data: call.data.unwrap_or_default().0,
             chain_id: None,
         }
     }
@@ -99,7 +101,7 @@ impl Into<CallRequest> for TransactionParameters {
             gas: Some(self.gas),
             gas_price: self.gas_price,
             value: Some(self.value),
-            data: Some(self.data),
+            data: Some(self.data.into()),
         }
     }
 }
