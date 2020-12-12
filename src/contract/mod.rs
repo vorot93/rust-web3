@@ -135,7 +135,7 @@ impl<T: Transport> Contract<T> {
                 gas_price,
                 value,
                 nonce,
-                data: Some(Bytes(data)),
+                data: Some(Bytes(data.to_vec())),
                 condition,
             })
             .await
@@ -167,7 +167,7 @@ impl<T: Transport> Contract<T> {
             gas_price: options.gas_price,
             value: options.value,
             nonce: options.nonce,
-            data: Some(Bytes(fn_data)),
+            data: Some(Bytes(fn_data.to_vec())),
             condition: options.condition,
         };
         confirm::send_transaction_with_confirmation(
@@ -193,7 +193,7 @@ impl<T: Transport> Contract<T> {
                     gas: options.gas,
                     gas_price: options.gas_price,
                     value: options.value,
-                    data: Some(Bytes(data)),
+                    data: Some(Bytes(data.to_vec())),
                 },
                 None,
             )
@@ -220,7 +220,7 @@ impl<T: Transport> Contract<T> {
                     gas: options.gas,
                     gas_price: options.gas_price,
                     value: options.value,
-                    data: Some(Bytes(call)),
+                    data: Some(Bytes(call.to_vec())),
                 },
                 block.into(),
             )
@@ -267,7 +267,7 @@ impl<T: Transport> Contract<T> {
             .map(move |l| {
                 let log = ev.parse_log(ethabi::RawLog {
                     topics: l.topics,
-                    data: l.data.0,
+                    data: l.data.0.into(),
                 })?;
 
                 Ok(R::from_tokens(
@@ -307,7 +307,7 @@ mod contract_signing {
                 nonce: options.nonce,
                 to: Some(self.address),
                 gas_price: options.gas_price,
-                data: Bytes(fn_data),
+                data: Bytes(fn_data.to_vec()),
                 ..Default::default()
             };
             if let Some(gas) = options.gas {

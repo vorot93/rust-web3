@@ -8,6 +8,7 @@ use crate::{
     types::{Address, Bytes, TransactionReceipt, TransactionRequest},
     Transport,
 };
+use anyhow::anyhow;
 use futures::{Future, TryFutureExt};
 use std::{collections::HashMap, time};
 
@@ -114,26 +115,26 @@ impl<T: Transport> Builder<T> {
 
         for (lib, address) in self.linker {
             if lib.len() > 38 {
-                return Err(Error::Abi(ethabi::Error::Other(
-                    "The library name should be under 39 characters.".into(),
-                )));
+                return Err(Error::Abi(ethabi::Error::Other(anyhow!(
+                    "The library name should be under 39 characters."
+                ))));
             }
             let replace = format!("__{:_<38}", lib); // This makes the required width 38 characters and will pad with `_` to match it.
             let address: String = hex::encode(address);
             code_hex = code_hex.replacen(&replace, &address, 1);
         }
         code_hex = code_hex.replace("\"", "").replace("0x", ""); // This is to fix truffle + serde_json redundant `"` and `0x`
-        let code = hex::decode(&code_hex).map_err(|e| ethabi::Error::Other(format!("hex decode error: {}", e)))?;
+        let code = hex::decode(&code_hex).map_err(|e| ethabi::Error::Other(anyhow!("hex decode error: {}", e)))?;
 
         let params = params.into_tokens();
         let data = match (abi.constructor(), params.is_empty()) {
             (None, false) => {
-                return Err(Error::Abi(ethabi::Error::Other(
-                    "Constructor is not defined in the ABI.".into(),
-                )));
+                return Err(Error::Abi(ethabi::Error::Other(anyhow!(
+                    "Constructor is not defined in the ABI."
+                ))));
             }
             (None, true) => code,
-            (Some(constructor), _) => constructor.encode_input(code, &params)?,
+            (Some(constructor), _) => constructor.encode_input(code.into(), &params)?.to_vec(),
         };
 
         let tx = TransactionRequest {
