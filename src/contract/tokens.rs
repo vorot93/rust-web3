@@ -161,25 +161,25 @@ impl Tokenizable for String {
 impl Tokenizable for Bytes {
     fn from_token(token: Token) -> Result<Self, Error> {
         match token {
-            Token::Bytes(s) => Ok(s.into()),
+            Token::Bytes(s) => Ok(s.to_vec().into()),
             other => Err(Error::InvalidOutputType(format!("Expected `Bytes`, got {:?}", other))),
         }
     }
 
     fn into_token(self) -> Token {
-        Token::Bytes(self.0)
+        Token::Bytes(self.0.into())
     }
 }
 
 impl Tokenizable for H256 {
     fn from_token(token: Token) -> Result<Self, Error> {
         match token {
-            Token::FixedBytes(mut s) => {
+            Token::FixedBytes(s) => {
                 if s.len() != 32 {
                     return Err(Error::InvalidOutputType(format!("Expected `H256`, got {:?}", s)));
                 }
                 let mut data = [0; 32];
-                for (idx, val) in s.drain(..).enumerate() {
+                for (idx, val) in s.iter().copied().enumerate() {
                     data[idx] = val;
                 }
                 Ok(data.into())
@@ -189,7 +189,7 @@ impl Tokenizable for H256 {
     }
 
     fn into_token(self) -> Token {
-        Token::FixedBytes(self.as_ref().to_vec())
+        Token::FixedBytes(self.as_ref().to_vec().into())
     }
 }
 
@@ -319,13 +319,13 @@ impl Tokenizable for BytesArray {
 impl Tokenizable for Vec<u8> {
     fn from_token(token: Token) -> Result<Self, Error> {
         match token {
-            Token::Bytes(data) => Ok(data),
-            Token::FixedBytes(data) => Ok(data),
+            Token::Bytes(data) => Ok(data.to_vec()),
+            Token::FixedBytes(data) => Ok(data.to_vec()),
             other => Err(Error::InvalidOutputType(format!("Expected `bytes`, got {:?}", other))),
         }
     }
     fn into_token(self) -> Token {
-        Token::Bytes(self)
+        Token::Bytes(self.into())
     }
 }
 
@@ -371,7 +371,7 @@ macro_rules! impl_fixed_types {
             }
 
             fn into_token(self) -> Token {
-                Token::FixedBytes(self.to_vec())
+                Token::FixedBytes(self.to_vec().into())
             }
         }
 
@@ -475,14 +475,14 @@ mod tests {
     fn should_decode_array_of_fixed_bytes() {
         // byte[8][]
         let tokens = vec![Token::FixedArray(vec![
-            Token::FixedBytes(hex!("01").into()),
-            Token::FixedBytes(hex!("02").into()),
-            Token::FixedBytes(hex!("03").into()),
-            Token::FixedBytes(hex!("04").into()),
-            Token::FixedBytes(hex!("05").into()),
-            Token::FixedBytes(hex!("06").into()),
-            Token::FixedBytes(hex!("07").into()),
-            Token::FixedBytes(hex!("08").into()),
+            Token::FixedBytes(hex!("01").to_vec().into()),
+            Token::FixedBytes(hex!("02").to_vec().into()),
+            Token::FixedBytes(hex!("03").to_vec().into()),
+            Token::FixedBytes(hex!("04").to_vec().into()),
+            Token::FixedBytes(hex!("05").to_vec().into()),
+            Token::FixedBytes(hex!("06").to_vec().into()),
+            Token::FixedBytes(hex!("07").to_vec().into()),
+            Token::FixedBytes(hex!("08").to_vec().into()),
         ])];
         let data: [[u8; 1]; 8] = Detokenize::from_tokens(tokens).unwrap();
         assert_eq!(data[0][0], 1);
